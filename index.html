@@ -34,55 +34,62 @@
         }
         .input-field {
             background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
-            color: #ffffff !important; border-radius: 0; outline: none; transition: all 0.3s ease;
+            color: #ffffff !important; border-radius: 0; outline: none;
         }
         input[type="date"], input[type="time"] { color-scheme: dark; color: white !important; }
-        #map { height: 280px; border-radius: 12px; border: 1px solid rgba(252, 246, 186, 0.3); margin-top: 12px; }
+        #map { height: 250px; border-radius: 12px; border: 1px solid rgba(252, 246, 186, 0.3); margin-top: 12px; }
     </style>
 </head>
 <body class="flex flex-col items-center min-h-screen py-20 px-6 text-center">
 
-    <header id="mainHeader" class="mb-16 w-full max-w-2xl">
-        <p class="text-[14px] md:text-[16px] text-white uppercase tracking-[0.8em] mb-4 font-semibold">Coastal Consolidated Solutions</p>
-        <h1 style="font-family: 'Cinzel', serif;" class="text-4xl md:text-7xl gold-shimmer uppercase tracking-widest leading-none">Crescent City Shofur</h1>
-        <p class="text-xl md:text-2xl font-light text-white lowercase tracking-[0.5em] mt-4">fueling</p>
+    <header id="mainHeader" class="mb-16">
+        <h1 style="font-family: 'Cinzel', serif;" class="text-4xl md:text-6xl gold-shimmer uppercase tracking-widest leading-none">Crescent City Shofur</h1>
+        <p class="text-xl md:text-2xl font-light text-white lowercase tracking-widest mt-2">fueling</p>
+        <p class="text-[14px] text-white uppercase tracking-[0.4em] mt-6 font-semibold">Coastal Consolidated Solutions</p>
     </header>
 
     <div id="infoPanels" class="w-full max-w-2xl space-y-6 mb-12 text-left">
-        <div class="glass-panel p-8 border-l-4 border-[#fcf6ba]">
-            <h3 class="text-[10px] text-[#fcf6ba] uppercase tracking-widest mb-4 font-bold">Corridor Logistics & Pricing</h3>
-            <ul class="text-[11px] space-y-2 text-gray-300 uppercase tracking-tighter">
-                <li>• <b class="text-white">Local Bridge:</b> $7 Base + $1.30/mi + $0.50/min ($15 Min)</li>
-                <li>• <b class="text-white">Charter:</b> $65/hr (2-Hour Minimum Deposit Required)</li>
-                <li>• <b class="text-white">Tour Bridge:</b> Overrides flat rates at 30+ miles ($1.31/mi + $1.42/min)</li>
-                <li>• <b class="text-white">Stewardship:</b> 10% Regional Growth Fund added to all missions</li>
-                <li>• <b class="text-white">Night-Ops:</b> Flat $10 surcharge applied after 22:00</li>
-            </ul>
+        <div class="glass-panel p-8">
+            <h3 class="text-[10px] text-[#fcf6ba] uppercase tracking-widest mb-4 font-bold italic underline">Pricing Disclosure</h3>
+            <p class="text-[11px] leading-relaxed text-gray-300">
+                • <b>Local Bridge:</b> $7 Base + $1.30/mi + $0.50/min ($15 Floor) <br>
+                • <b>Charter:</b> $65/hr (2hr Minimum Deposit) <br>
+                • <b>Tour:</b> Overrides flat rates at 30+ miles ($1.31/mi + $1.42/min) <br>
+                • <b>Stewardship:</b> 10% Regional Growth Fund added to subtotal <br>
+                • <b>Night-Ops:</b> $10 Surcharge after 22:00
+            </p>
+        </div>
+        <div class="glass-panel p-8">
+            <h3 class="text-[10px] text-[#fcf6ba] uppercase tracking-widest mb-4 font-bold">Founder’s Note</h3>
+            <p class="text-sm font-light leading-relaxed text-gray-300 italic">"We operate at the intersection of logistics and legacy. Every transaction should leave our infrastructure stronger than we found it."</p>
+        </div>
+        <div class="glass-panel p-8">
+            <h3 class="text-[10px] text-[#fcf6ba] uppercase tracking-widest mb-4 font-bold">Mission Statement</h3>
+            <p class="text-sm font-light leading-relaxed text-gray-300">To steward the movement of the Gulf South through Local Tailored Excellence, optimizing the regional corridor with disciplined stewardship.</p>
         </div>
     </div>
 
     <div class="w-full max-w-md">
-        <button onclick="revealCommand()" id="fuelBtn" class="w-full border-2 border-[#fcf6ba] py-6 px-10 text-[#fcf6ba] uppercase text-xs tracking-[0.5em] font-bold hover:bg-[#fcf6ba] hover:text-black transition-all">
+        <button onclick="revealCommand()" id="fuelBtn" class="w-full border-2 border-[#fcf6ba] py-6 px-10 text-[#fcf6ba] uppercase text-xs tracking-[0.5em] font-bold hover:bg-[#fcf6ba] hover:text-black transition-all duration-700">
             Fuel the Mission
         </button>
 
         <div id="commandCenter" class="hidden mt-12 space-y-4 text-left">
-            <h2 class="text-[#fcf6ba] text-[10px] uppercase tracking-widest font-bold mb-6 border-b border-[#fcf6ba]/20 pb-2">Mission Authorization</h2>
-            
+            <h2 class="text-[#fcf6ba] text-[10px] uppercase tracking-widest font-bold mb-6">Mission Authorization</h2>
             <input type="text" id="stakeholderName" placeholder="STAKEHOLDER NAME" class="input-field w-full p-4 text-xs tracking-widest uppercase">
             
             <div class="flex flex-col md:flex-row gap-4">
-                <input type="email" id="stakeholderEmail" placeholder="EMAIL ADDRESS" class="input-field flex-1 p-4 text-xs tracking-widest">
-                <input type="tel" id="stakeholderPhone" placeholder="PHONE NUMBER" class="input-field flex-1 p-4 text-xs tracking-widest">
+                <input type="email" id="stakeholderEmail" placeholder="EMAIL" class="input-field flex-1 p-4 text-xs tracking-widest">
+                <input type="tel" id="stakeholderPhone" placeholder="PHONE" class="input-field flex-1 p-4 text-xs tracking-widest">
             </div>
             
             <select id="bridgeType" onchange="updateMarkers()" class="input-field w-full p-4 text-xs tracking-widest bg-[#0a0118]">
-                <option value="local">Local Bridge ($15 Min)</option>
-                <option value="charter">Charter ($65/hr - 2hr Min Deposit)</option>
-                <option value="tour">Tour Bridge (30+ Miles / Corridor)</option>
+                <option value="local">Local Bridge</option>
+                <option value="charter">Charter ($130 Deposit)</option>
+                <option value="tour">Tour Bridge</option>
             </select>
 
-            <input type="text" id="pickup" placeholder="PICKUP LOCATION" class="input-field w-full p-4 text-xs tracking-widest uppercase">
+            <input type="text" id="pickup" placeholder="PICKUP" class="input-field w-full p-4 text-xs tracking-widest uppercase">
             <input type="text" id="dropoff" placeholder="DESTINATION" class="input-field w-full p-4 text-xs tracking-widest uppercase">
             
             <div id="map"></div>
@@ -100,10 +107,10 @@
 
             <div id="priceSection" class="mt-6 text-center py-4 border-t border-white/10">
                 <p id="priceOutput" class="text-5xl gold-shimmer font-light">$0.00</p>
-                <p id="priceDesc" class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest">Calculating Mission Logistics...</p>
+                <p id="priceDesc" class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest italic">Awaiting Logistics...</p>
             </div>
 
-            <button onclick="dispatchMission()" class="w-full bg-[#fcf6ba] text-black py-6 text-xs font-black uppercase tracking-[0.5em] mt-8 hover:bg-white transition-all shadow-[0_0_30px_rgba(252,246,186,0.3)]">
+            <button onclick="dispatchMission()" class="w-full bg-[#fcf6ba] text-black py-6 text-xs font-black uppercase tracking-[0.5em] mt-8 hover:bg-white transition-all">
                 Authorize Mission
             </button>
         </div>
@@ -119,10 +126,7 @@
                 styles: [{featureType:"all",stylers:[{saturation:-100},{lightness: -50}]}]
             });
             directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({
-                map: map,
-                polylineOptions: { strokeColor: "#fcf6ba", strokeWeight: 5 }
-            });
+            directionsRenderer = new google.maps.DirectionsRenderer({ map: map, polylineOptions: { strokeColor: "#fcf6ba", strokeWeight: 4 } });
             
             autocompletePickup = new google.maps.places.Autocomplete(document.getElementById('pickup'));
             autocompleteDropoff = new google.maps.places.Autocomplete(document.getElementById('dropoff'));
@@ -136,11 +140,7 @@
             const bridge = document.getElementById('bridgeType').value;
 
             if (pickupVal && dropoffVal) {
-                directionsService.route({
-                    origin: pickupVal,
-                    destination: dropoffVal,
-                    travelMode: 'DRIVING'
-                }, (result, status) => {
+                directionsService.route({ origin: pickupVal, destination: dropoffVal, travelMode: 'DRIVING' }, (result, status) => {
                     if (status === 'OK') {
                         directionsRenderer.setDirections(result);
                         const leg = result.routes[0].legs[0];
@@ -148,8 +148,8 @@
                         const min = leg.duration.value / 60;
                         let subtotal = 0;
 
-                        const isToMSY = dropoffVal.toUpperCase().includes("MSY") || dropoffVal.toUpperCase().includes("LOUIS ARMSTRONG");
-                        const isFromMSY = pickupVal.toUpperCase().includes("MSY") || pickupVal.toUpperCase().includes("LOUIS ARMSTRONG");
+                        const isToMSY = dropoffVal.toUpperCase().includes("MSY") || dropoffVal.toUpperCase().includes("AIRPORT");
+                        const isFromMSY = pickupVal.toUpperCase().includes("MSY") || pickupVal.toUpperCase().includes("AIRPORT");
 
                         if (isToMSY) subtotal = 45;
                         else if (isFromMSY) subtotal = 65;
@@ -161,11 +161,9 @@
                         }
 
                         const hour = new Date().getHours();
-                        const nightFee = (hour >= 22 || hour < 5) ? 10 : 0;
-                        const finalTotal = (subtotal * 1.10) + nightFee;
-
+                        const finalTotal = (subtotal * 1.10) + ((hour >= 22 || hour < 5) ? 10 : 0);
                         document.getElementById('priceOutput').innerText = '$' + finalTotal.toFixed(2);
-                        document.getElementById('priceDesc').innerText = `STAKEHOLDER LOGISTICS: ${mi.toFixed(1)} MILES VALIDATED`;
+                        document.getElementById('priceDesc').innerText = `${mi.toFixed(1)} MILES | 10% GROWTH FUND INCLUDED`;
                     }
                 });
             }
@@ -174,32 +172,20 @@
         function revealCommand() {
             document.getElementById('commandCenter').classList.remove('hidden');
             document.getElementById('fuelBtn').style.display = 'none';
-            // Force map resize
-            google.maps.event.trigger(map, "resize");
+            google.maps.event.trigger(map, 'resize');
         }
 
         function dispatchMission() {
-            const amountDisplay = document.getElementById('priceOutput').innerText;
-            const amountCent = Math.round(parseFloat(amountDisplay.replace('$', '')) * 100);
+            const amountStr = document.getElementById('priceOutput').innerText.replace('$', '');
+            const amountCent = Math.round(parseFloat(amountStr) * 100);
 
-            if (amountCent === 0) { 
-                alert("Logistics Required: Enter Pickup and Destination to calculate the mission fuel."); 
-                return; 
-            }
+            if (amountCent === 0) { alert("Please enter locations first."); return; }
 
-            // Mobile-first Stripe Handoff
             stripe.redirectToCheckout({
-                lineItems: [{ 
-                    price_data: { 
-                        currency: 'usd', 
-                        product_data: { name: 'CCS MISSION AUTHORIZATION' }, 
-                        unit_amount: amountCent 
-                    }, 
-                    quantity: 1 
-                }],
+                lineItems: [{ price_data: { currency: 'usd', product_data: { name: 'CCS MISSION AUTHORIZATION' }, unit_amount: amountCent }, quantity: 1 }],
                 mode: 'payment',
-                successUrl: window.location.origin + window.location.pathname + `?success=true`,
-                cancelUrl: window.location.origin + window.location.pathname,
+                successUrl: window.location.origin + '?success=true',
+                cancelUrl: window.location.origin,
             }).then(res => { if (res.error) alert(res.error.message); });
         }
     </script>
