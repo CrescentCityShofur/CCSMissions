@@ -37,31 +37,27 @@
             color: #ffffff !important; border-radius: 0; outline: none; transition: all 0.3s ease;
             appearance: none; -webkit-appearance: none;
         }
-        /* Safari Visibility Fix for Date/Time */
-        input[type="date"], input[type="time"] {
-            color-scheme: dark;
-            color: white !important;
-        }
+        input[type="date"], input[type="time"] { color-scheme: dark; color: white !important; }
         .input-field:focus { border-color: var(--gold); background: rgba(255,255,255,0.08); }
-        #map { height: 200px; border-radius: 12px; border: 1px solid rgba(252, 246, 186, 0.3); margin-top: 12px; }
+        #map { height: 250px; border-radius: 12px; border: 1px solid rgba(252, 246, 186, 0.3); margin-top: 12px; }
     </style>
 </head>
 <body class="flex flex-col items-center min-h-screen py-20 px-6 text-center">
 
-    <header id="mainHeader" class="mb-16">
-        <h1 style="font-family: 'Cinzel', serif;" class="text-4xl md:text-6xl gold-shimmer uppercase tracking-widest leading-none">Crescent City Shofur</h1>
-        <p class="text-xl md:text-2xl font-light text-white lowercase tracking-widest mt-2">fueling</p>
-        <p class="text-[10px] text-gray-500 uppercase tracking-[0.6em] mt-8">Coastal Consolidated Solutions</p>
+    <header id="mainHeader" class="mb-16 w-full max-w-4xl">
+        <p class="text-[12px] text-gray-400 uppercase tracking-[1em] mb-4">Coastal Consolidated Solutions</p>
+        <h1 style="font-family: 'Cinzel', serif;" class="text-4xl md:text-7xl gold-shimmer uppercase tracking-widest leading-none">Crescent City Shofur</h1>
+        <p class="text-xl md:text-2xl font-light text-white lowercase tracking-[0.5em] mt-2">fueling</p>
     </header>
 
     <div id="infoPanels" class="w-full max-w-2xl space-y-6 mb-12 text-left">
+        <div class="glass-panel p-8 border-l-4 border-l-[#fcf6ba]">
+            <h3 class="text-[10px] text-[#fcf6ba] uppercase tracking-widest mb-4 font-bold underline">Mission Stewardship</h3>
+            <p class="text-[11px] leading-relaxed text-gray-300">Pricing is calculated via our Regional Corridor Math: Base + Distance + Time. All missions contribute 10% to the Regional Growth Fund for infrastructure stewardship. Missions occurring after 22:00 incur a flat $10 Night-Ops surcharge.</p>
+        </div>
         <div class="glass-panel p-8">
             <h3 class="text-[10px] text-[#fcf6ba] uppercase tracking-widest mb-4 font-bold">Founder’s Note</h3>
             <p class="text-sm font-light leading-relaxed text-gray-300 italic">"We operate at the intersection of logistics and legacy. Every transaction should leave our infrastructure stronger than we found it."</p>
-        </div>
-        <div class="glass-panel p-8">
-            <h3 class="text-[10px] text-[#fcf6ba] uppercase tracking-widest mb-4 font-bold">Mission Statement</h3>
-            <p class="text-sm font-light leading-relaxed text-gray-300">To steward the movement of the Gulf South through Local Tailored Excellence, optimizing the regional corridor with disciplined stewardship.</p>
         </div>
     </div>
 
@@ -71,7 +67,7 @@
         </button>
 
         <div id="commandCenter" class="hidden mt-12 space-y-4 text-left">
-            <h2 class="text-[#fcf6ba] text-[10px] uppercase tracking-widest font-bold mb-6">Mission Authorization</h2>
+            <h2 class="text-[#fcf6ba] text-[10px] uppercase tracking-widest font-bold mb-6 border-b border-[#fcf6ba]/20 pb-2">Mission Authorization</h2>
             
             <input type="text" id="stakeholderName" placeholder="STAKEHOLDER NAME" class="input-field w-full p-4 text-xs tracking-widest uppercase">
             
@@ -104,10 +100,10 @@
 
             <div id="priceSection" class="mt-6 text-center py-4 border-t border-white/10">
                 <p id="priceOutput" class="text-5xl gold-shimmer font-light">$0.00</p>
-                <p id="priceDesc" class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest">Awaiting Logistics Data...</p>
+                <p id="priceDesc" class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest italic">Awaiting Logistics Data...</p>
             </div>
 
-            <button onclick="dispatchMission()" class="w-full bg-[#fcf6ba] text-black py-6 text-xs font-black uppercase tracking-[0.5em] mt-8 hover:bg-white transition-all duration-300">
+            <button onclick="dispatchMission()" class="w-full bg-[#fcf6ba] text-black py-6 text-xs font-black uppercase tracking-[0.5em] mt-8 hover:bg-white transition-all duration-300 shadow-[0_0_20px_rgba(252,246,186,0.2)]">
                 Authorize Mission
             </button>
         </div>
@@ -115,7 +111,7 @@
 
     <script>
         const stripe = Stripe('pk_live_51Sub4u00aruvjmQ2mvXyX7v3YFY11LEMViffvxVJ4rYQ03MyatLbE640LKBAZZnrji9z6RKB4irBb0MTdpTRrcXmW00Lhx0XJ2v');
-        let map, directionsService, autocompletePickup, autocompleteDropoff;
+        let map, directionsService, directionsRenderer, autocompletePickup, autocompleteDropoff;
 
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -123,6 +119,11 @@
                 styles: [{featureType:"all",stylers:[{saturation:-100},{lightness: -50}]}]
             });
             directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                polylineOptions: { strokeColor: "#fcf6ba", strokeWeight: 4 }
+            });
+            
             autocompletePickup = new google.maps.places.Autocomplete(document.getElementById('pickup'));
             autocompleteDropoff = new google.maps.places.Autocomplete(document.getElementById('dropoff'));
             autocompletePickup.addListener('place_changed', updateMarkers);
@@ -130,21 +131,26 @@
         }
 
         function updateMarkers() {
-            const pickupVal = document.getElementById('pickup').value.toUpperCase();
-            const dropoffVal = document.getElementById('dropoff').value.toUpperCase();
+            const pickupVal = document.getElementById('pickup').value;
+            const dropoffVal = document.getElementById('dropoff').value;
             const bridge = document.getElementById('bridgeType').value;
 
             if (pickupVal && dropoffVal) {
-                directionsService.route({ origin: pickupVal, destination: dropoffVal, travelMode: 'DRIVING' }, (result, status) => {
+                directionsService.route({
+                    origin: pickupVal,
+                    destination: dropoffVal,
+                    travelMode: 'DRIVING'
+                }, (result, status) => {
                     if (status === 'OK') {
+                        directionsRenderer.setDirections(result);
                         const leg = result.routes[0].legs[0];
                         const mi = leg.distance.value / 1609.34;
                         const min = leg.duration.value / 60;
                         let subtotal = 0;
 
                         // Airport Logic
-                        const isToMSY = dropoffVal.includes("MSY") || dropoffVal.includes("AIRPORT");
-                        const isFromMSY = pickupVal.includes("MSY") || pickupVal.includes("AIRPORT");
+                        const isToMSY = dropoffVal.toUpperCase().includes("MSY") || dropoffVal.toUpperCase().includes("LOUIS ARMSTRONG");
+                        const isFromMSY = pickupVal.toUpperCase().includes("MSY") || pickupVal.toUpperCase().includes("LOUIS ARMSTRONG");
 
                         if (isToMSY) subtotal = 45;
                         else if (isFromMSY) subtotal = 65;
@@ -155,7 +161,6 @@
                             if (subtotal < 15) subtotal = 15;
                         }
 
-                        // Global Vars: 10% Fund + $10 Night Ops
                         const hour = new Date().getHours();
                         const nightFee = (hour >= 22 || hour < 5) ? 10 : 0;
                         const finalTotal = (subtotal * 1.10) + nightFee;
@@ -172,19 +177,16 @@
             document.getElementById('fuelBtn').style.display = 'none';
         }
 
-        // UPDATED: Prioritizes Stripe Checkout over Email hijacks
         function dispatchMission() {
             const name = document.getElementById('stakeholderName').value;
-            const email = document.getElementById('stakeholderEmail').value;
-            const pickup = document.getElementById('pickup').value;
-            const dropoff = document.getElementById('dropoff').value;
-            const date = document.getElementById('date').value;
-            const time = document.getElementById('time').value;
             const amountDisplay = document.getElementById('priceOutput').innerText;
             const amountCent = Math.round(parseFloat(amountDisplay.replace('$', '')) * 100);
 
-            if (!name || !email || !date || !time || amountCent === 0) { 
-                alert("Logistics Required: Ensure all fields and locations are defined."); 
+            // System Check Alert to help diagnose mobile silence
+            alert("CCS SYSTEM CHECK: Initializing secure bridge for $" + amountDisplay);
+
+            if (!name || amountCent === 0) { 
+                alert("Logistics Error: Define locations and date to calculate fuel requirements."); 
                 return; 
             }
 
@@ -192,41 +194,18 @@
                 lineItems: [{ 
                     price_data: { 
                         currency: 'usd', 
-                        product_data: { 
-                            name: 'CCS MISSION AUTHORIZATION',
-                            description: `${name} | ${pickup} to ${dropoff}`
-                        }, 
+                        product_data: { name: 'CCS MISSION AUTHORIZATION: ' + name.toUpperCase() }, 
                         unit_amount: amountCent 
                     }, 
                     quantity: 1 
                 }],
                 mode: 'payment',
-                successUrl: window.location.origin + window.location.pathname + `?success=true&name=${encodeURIComponent(name)}&p=${encodeURIComponent(pickup)}&d=${encodeURIComponent(dropoff)}&dt=${date}&tm=${time}`,
+                successUrl: window.location.origin + window.location.pathname + `?success=true&name=${encodeURIComponent(name)}`,
                 cancelUrl: window.location.origin + window.location.pathname,
-                customer_email: email,
             }).then(result => {
                 if (result.error) alert(result.error.message);
             });
         }
-
-        // Post-Payment Success Handler
-        window.addEventListener('load', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('success') === 'true') {
-                document.getElementById('fuelBtn').style.display = 'none';
-                document.getElementById('infoPanels').style.display = 'none';
-                document.getElementById('mainHeader').innerHTML = `<h1 class="text-4xl gold-shimmer uppercase tracking-widest">Mission Authorized</h1>`;
-                
-                const cc = document.getElementById('commandCenter');
-                cc.classList.remove('hidden');
-                cc.innerHTML = `
-                    <div class="glass-panel p-12 text-center border border-[#fcf6ba]/30">
-                        <p class="text-gray-300 mb-8 uppercase text-xs tracking-widest font-bold">Investment Confirmed</p>
-                        <p class="text-sm text-gray-500 mb-8 italic">Welcome, ${urlParams.get('name')}. Dispatch has been notified of your corridor request.</p>
-                        <button onclick="location.href=window.location.pathname" class="text-gray-500 uppercase text-[9px] tracking-widest hover:text-white transition-all">Return to Hub</button>
-                    </div>`;
-            }
-        });
     </script>
 </body>
 </html>
