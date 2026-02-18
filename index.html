@@ -115,6 +115,8 @@
                 styles: [{featureType:"all",stylers:[{saturation:-100},{lightness: -50}]}]
             });
             directionsService = new google.maps.DirectionsService();
+            
+            // Re-wired Autocomplete Logic
             autocompletePickup = new google.maps.places.Autocomplete(document.getElementById('pickup'));
             autocompleteDropoff = new google.maps.places.Autocomplete(document.getElementById('dropoff'));
             autocompletePickup.addListener('place_changed', updateMarkers);
@@ -134,9 +136,9 @@
                         const min = leg.duration.value / 60;
                         let subtotal = 0;
 
-                        // Airport Calculations
-                        const isToMSY = dropoffVal.includes("MSY") || dropoffVal.includes("AIRPORT") || dropoffVal.includes("LOUIS ARMSTRONG");
-                        const isFromMSY = pickupVal.includes("MSY") || pickupVal.includes("AIRPORT") || pickupVal.includes("LOUIS ARMSTRONG");
+                        // Airport Logic
+                        const isToMSY = dropoffVal.includes("MSY") || dropoffVal.includes("AIRPORT");
+                        const isFromMSY = pickupVal.includes("MSY") || pickupVal.includes("AIRPORT");
 
                         if (isToMSY) subtotal = 45;
                         else if (isFromMSY) subtotal = 65;
@@ -147,7 +149,7 @@
                             if (subtotal < 15) subtotal = 15;
                         }
 
-                        // Night Ops & Stewardship
+                        // Global Vars
                         const hour = new Date().getHours();
                         const nightFee = (hour >= 22 || hour < 5) ? 10 : 0;
                         const finalTotal = (subtotal * 1.10) + nightFee;
@@ -176,6 +178,7 @@
 
             if (!name || !email || !date || !time || amountCent === 0) { alert("Authorization Error: Define logistics."); return; }
 
+            // Mission Email Trigger
             const subject = `MISSION AUTHORIZED: ${name.toUpperCase()}`;
             const body = `STAKEHOLDER: ${name}%0D%0ALOGISTICS: ${pickup} TO ${dropoff}%0D%0ASCHEDULE: ${date} @ ${time}%0D%0AAMOUNT: ${amountDisplay}`;
             window.open(`mailto:CrescentCityShofur@Gmail.com?subject=${subject}&body=${body}`, '_blank');
@@ -199,15 +202,16 @@
                 const rawDate = urlParams.get('dt').replace(/-/g, '');
                 const rawTime = urlParams.get('tm').replace(/:/g, '') + '00';
                 const icsTime = `${rawDate}T${rawTime}`;
-                const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:CCS Mission Authorized\nDTSTART:${icsTime}\nLOCATION:${urlParams.get('p')}\nEND:VEVENT\nEND:VCALENDAR`;
+                const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:CCS Mission Authorized\nDESCRIPTION:Logistics: ${urlParams.get('p')} to ${urlParams.get('d')}\nDTSTART:${icsTime}\nLOCATION:${urlParams.get('p')}\nEND:VEVENT\nEND:VCALENDAR`;
 
                 const cc = document.getElementById('commandCenter');
                 cc.classList.remove('hidden');
                 cc.innerHTML = `
                     <div class="glass-panel p-12 text-center border border-[#fcf6ba]/30">
-                        <p class="text-gray-300 mb-8 uppercase text-xs tracking-widest font-bold">Logistics Confirmed</p>
+                        <p class="text-gray-300 mb-8 uppercase text-xs tracking-widest font-bold">Logistics Forwarded to Dispatch</p>
+                        <p class="text-sm text-gray-500 mb-8 italic">Welcome, ${urlParams.get('name')}. Your infrastructure investment is confirmed.</p>
                         <a href="data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}" download="CCS-Mission.ics" class="inline-block border border-[#fcf6ba] text-[#fcf6ba] px-8 py-3 text-[10px] uppercase font-bold tracking-widest hover:bg-[#fcf6ba] hover:text-black transition-all mb-4">Add to Calendar</a><br>
-                        <button onclick="location.href=window.location.pathname" class="text-gray-500 uppercase text-[9px] tracking-widest hover:text-white">Return to Hub</button>
+                        <button onclick="location.href=window.location.pathname" class="text-gray-500 uppercase text-[9px] tracking-widest hover:text-white transition-all">Return to Hub</button>
                     </div>`;
             }
         });
