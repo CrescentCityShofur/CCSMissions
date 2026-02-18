@@ -37,10 +37,9 @@
             color: #ffffff !important; border-radius: 0; outline: none; transition: all 0.3s ease;
             appearance: none; -webkit-appearance: none;
         }
-        /* Specific fix for the Date/Time boxes on Safari */
+        /* Safari Visibility Fix for Date/Time */
         input[type="date"], input[type="time"] {
-            position: relative;
-            color-scheme: dark; /* Forces browser to show white text/icons */
+            color-scheme: dark;
             color: white !important;
         }
         .input-field:focus { border-color: var(--gold); background: rgba(255,255,255,0.08); }
@@ -95,11 +94,11 @@
             <div class="flex gap-4">
                 <div class="flex-1">
                     <label class="text-[9px] text-[#fcf6ba] uppercase tracking-widest ml-1">Date</label>
-                    <input type="date" id="date" class="input-field w-full p-4 text-xs tracking-widest">
+                    <input type="date" id="date" class="input-field w-full p-4 text-xs">
                 </div>
                 <div class="flex-1">
                     <label class="text-[9px] text-[#fcf6ba] uppercase tracking-widest ml-1">Time</label>
-                    <input type="time" id="time" class="input-field w-full p-4 text-xs tracking-widest">
+                    <input type="time" id="time" class="input-field w-full p-4 text-xs">
                 </div>
             </div>
 
@@ -143,6 +142,7 @@
                         const min = leg.duration.value / 60;
                         let subtotal = 0;
 
+                        // Airport Logic
                         const isToMSY = dropoffVal.includes("MSY") || dropoffVal.includes("AIRPORT");
                         const isFromMSY = pickupVal.includes("MSY") || pickupVal.includes("AIRPORT");
 
@@ -155,6 +155,7 @@
                             if (subtotal < 15) subtotal = 15;
                         }
 
+                        // Global Vars: 10% Fund + $10 Night Ops
                         const hour = new Date().getHours();
                         const nightFee = (hour >= 22 || hour < 5) ? 10 : 0;
                         const finalTotal = (subtotal * 1.10) + nightFee;
@@ -171,6 +172,7 @@
             document.getElementById('fuelBtn').style.display = 'none';
         }
 
+        // UPDATED: Prioritizes Stripe Checkout over Email hijacks
         function dispatchMission() {
             const name = document.getElementById('stakeholderName').value;
             const email = document.getElementById('stakeholderEmail').value;
@@ -181,20 +183,50 @@
             const amountDisplay = document.getElementById('priceOutput').innerText;
             const amountCent = Math.round(parseFloat(amountDisplay.replace('$', '')) * 100);
 
-            if (!name || !email || !date || !time || amountCent === 0) { alert("Authorization Error: Define logistics."); return; }
-
-            const subject = `MISSION AUTHORIZED: ${name.toUpperCase()}`;
-            const body = `STAKEHOLDER: ${name}%0D%0ALOGISTICS: ${pickup} TO ${dropoff}%0D%0ASCHEDULE: ${date} @ ${time}%0D%0AAMOUNT: ${amountDisplay}`;
-            window.open(`mailto:CrescentCityShofur@Gmail.com?subject=${subject}&body=${body}`, '_blank');
+            if (!name || !email || !date || !time || amountCent === 0) { 
+                alert("Logistics Required: Ensure all fields and locations are defined."); 
+                return; 
+            }
 
             stripe.redirectToCheckout({
-                lineItems: [{ price_data: { currency: 'usd', product_data: { name: 'CCS MISSION AUTHORIZATION' }, unit_amount: amountCent }, quantity: 1 }],
+                lineItems: [{ 
+                    price_data: { 
+                        currency: 'usd', 
+                        product_data: { 
+                            name: 'CCS MISSION AUTHORIZATION',
+                            description: `${name} | ${pickup} to ${dropoff}`
+                        }, 
+                        unit_amount: amountCent 
+                    }, 
+                    quantity: 1 
+                }],
                 mode: 'payment',
                 successUrl: window.location.origin + window.location.pathname + `?success=true&name=${encodeURIComponent(name)}&p=${encodeURIComponent(pickup)}&d=${encodeURIComponent(dropoff)}&dt=${date}&tm=${time}`,
                 cancelUrl: window.location.origin + window.location.pathname,
                 customer_email: email,
+            }).then(result => {
+                if (result.error) alert(result.error.message);
             });
         }
+
+        // Post-Payment Success Handler
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                document.getElementById('fuelBtn').style.display = 'none';
+                document.getElementById('infoPanels').style.display = 'none';
+                document.getElementById('mainHeader').innerHTML = `<h1 class="text-4xl gold-shimmer uppercase tracking-widest">Mission Authorized</h1>`;
+                
+                const cc = document.getElementById('commandCenter');
+                cc.classList.remove('hidden');
+                cc.innerHTML = `
+                    <div class="glass-panel p-12 text-center border border-[#fcf6ba]/30">
+                        <p class="text-gray-300 mb-8 uppercase text-xs tracking-widest font-bold">Investment Confirmed</p>
+                        <p class="text-sm text-gray-500 mb-8 italic">Welcome, ${urlParams.get('name')}. Dispatch has been notified of your corridor request.</p>
+                        <button onclick="location.href=window.location.pathname" class="text-gray-500 uppercase text-[9px] tracking-widest hover:text-white transition-all">Return to Hub</button>
+                    </div>`;
+            }
+        });
     </script>
 </body>
 </html>
