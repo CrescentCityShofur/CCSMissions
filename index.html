@@ -34,7 +34,14 @@
         }
         .input-field {
             background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
-            color: white; border-radius: 0; outline: none; transition: all 0.3s ease;
+            color: #ffffff !important; border-radius: 0; outline: none; transition: all 0.3s ease;
+            appearance: none; -webkit-appearance: none;
+        }
+        /* Specific fix for the Date/Time boxes on Safari */
+        input[type="date"], input[type="time"] {
+            position: relative;
+            color-scheme: dark; /* Forces browser to show white text/icons */
+            color: white !important;
         }
         .input-field:focus { border-color: var(--gold); background: rgba(255,255,255,0.08); }
         #map { height: 200px; border-radius: 12px; border: 1px solid rgba(252, 246, 186, 0.3); margin-top: 12px; }
@@ -56,10 +63,6 @@
         <div class="glass-panel p-8">
             <h3 class="text-[10px] text-[#fcf6ba] uppercase tracking-widest mb-4 font-bold">Mission Statement</h3>
             <p class="text-sm font-light leading-relaxed text-gray-300">To steward the movement of the Gulf South through Local Tailored Excellence, optimizing the regional corridor with disciplined stewardship.</p>
-        </div>
-        <div class="glass-panel p-8">
-            <h3 class="text-[10px] text-[#fcf6ba] uppercase tracking-widest mb-4 font-bold">Stakeholder Acknowledgment</h3>
-            <p class="text-sm font-light leading-relaxed text-gray-300">A portion of every engagement is directed to the CCS Regional Growth Fund, fueling sustainable movement across the hub.</p>
         </div>
     </div>
 
@@ -90,8 +93,14 @@
             <div id="map"></div>
 
             <div class="flex gap-4">
-                <input type="date" id="date" class="input-field flex-1 p-4 text-xs tracking-widest text-gray-400">
-                <input type="time" id="time" class="input-field flex-1 p-4 text-xs tracking-widest text-gray-400">
+                <div class="flex-1">
+                    <label class="text-[9px] text-[#fcf6ba] uppercase tracking-widest ml-1">Date</label>
+                    <input type="date" id="date" class="input-field w-full p-4 text-xs tracking-widest">
+                </div>
+                <div class="flex-1">
+                    <label class="text-[9px] text-[#fcf6ba] uppercase tracking-widest ml-1">Time</label>
+                    <input type="time" id="time" class="input-field w-full p-4 text-xs tracking-widest">
+                </div>
             </div>
 
             <div id="priceSection" class="mt-6 text-center py-4 border-t border-white/10">
@@ -115,8 +124,6 @@
                 styles: [{featureType:"all",stylers:[{saturation:-100},{lightness: -50}]}]
             });
             directionsService = new google.maps.DirectionsService();
-            
-            // Re-wired Autocomplete Logic
             autocompletePickup = new google.maps.places.Autocomplete(document.getElementById('pickup'));
             autocompleteDropoff = new google.maps.places.Autocomplete(document.getElementById('dropoff'));
             autocompletePickup.addListener('place_changed', updateMarkers);
@@ -136,7 +143,6 @@
                         const min = leg.duration.value / 60;
                         let subtotal = 0;
 
-                        // Airport Logic
                         const isToMSY = dropoffVal.includes("MSY") || dropoffVal.includes("AIRPORT");
                         const isFromMSY = pickupVal.includes("MSY") || pickupVal.includes("AIRPORT");
 
@@ -149,7 +155,6 @@
                             if (subtotal < 15) subtotal = 15;
                         }
 
-                        // Global Vars
                         const hour = new Date().getHours();
                         const nightFee = (hour >= 22 || hour < 5) ? 10 : 0;
                         const finalTotal = (subtotal * 1.10) + nightFee;
@@ -178,7 +183,6 @@
 
             if (!name || !email || !date || !time || amountCent === 0) { alert("Authorization Error: Define logistics."); return; }
 
-            // Mission Email Trigger
             const subject = `MISSION AUTHORIZED: ${name.toUpperCase()}`;
             const body = `STAKEHOLDER: ${name}%0D%0ALOGISTICS: ${pickup} TO ${dropoff}%0D%0ASCHEDULE: ${date} @ ${time}%0D%0AAMOUNT: ${amountDisplay}`;
             window.open(`mailto:CrescentCityShofur@Gmail.com?subject=${subject}&body=${body}`, '_blank');
@@ -191,30 +195,6 @@
                 customer_email: email,
             });
         }
-
-        window.addEventListener('load', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('success') === 'true') {
-                document.getElementById('fuelBtn').style.display = 'none';
-                document.getElementById('infoPanels').style.display = 'none';
-                document.getElementById('mainHeader').innerHTML = `<h1 class="text-4xl gold-shimmer uppercase tracking-widest">Mission Authorized</h1>`;
-                
-                const rawDate = urlParams.get('dt').replace(/-/g, '');
-                const rawTime = urlParams.get('tm').replace(/:/g, '') + '00';
-                const icsTime = `${rawDate}T${rawTime}`;
-                const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:CCS Mission Authorized\nDESCRIPTION:Logistics: ${urlParams.get('p')} to ${urlParams.get('d')}\nDTSTART:${icsTime}\nLOCATION:${urlParams.get('p')}\nEND:VEVENT\nEND:VCALENDAR`;
-
-                const cc = document.getElementById('commandCenter');
-                cc.classList.remove('hidden');
-                cc.innerHTML = `
-                    <div class="glass-panel p-12 text-center border border-[#fcf6ba]/30">
-                        <p class="text-gray-300 mb-8 uppercase text-xs tracking-widest font-bold">Logistics Forwarded to Dispatch</p>
-                        <p class="text-sm text-gray-500 mb-8 italic">Welcome, ${urlParams.get('name')}. Your infrastructure investment is confirmed.</p>
-                        <a href="data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}" download="CCS-Mission.ics" class="inline-block border border-[#fcf6ba] text-[#fcf6ba] px-8 py-3 text-[10px] uppercase font-bold tracking-widest hover:bg-[#fcf6ba] hover:text-black transition-all mb-4">Add to Calendar</a><br>
-                        <button onclick="location.href=window.location.pathname" class="text-gray-500 uppercase text-[9px] tracking-widest hover:text-white transition-all">Return to Hub</button>
-                    </div>`;
-            }
-        });
     </script>
 </body>
 </html>
