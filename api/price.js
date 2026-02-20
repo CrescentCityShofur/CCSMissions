@@ -1,38 +1,25 @@
-import axios from 'axios';
+const axios = require('axios');
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const { pickup, dropoff, bridgeType, date, time } = req.body;
-  const GOOGLE_KEY = process.env.GOOGLE_MAPS_API_KEY;
+    const { origin, destination, startTime } = req.query;
 
-  try {
-    const gURL = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(pickup)}&destinations=${encodeURIComponent(dropoff)}&key=${GOOGLE_KEY}`;
-    const gRes = await axios.get(gURL);
-    const data = gRes.data.rows[0].elements[0];
-    if (data.status !== 'OK') return res.status(400).json({ error: 'Invalid route' });
+    const isToMSY = destination.toLowerCase().includes("msy");
+    const isFromMSY = origin.toLowerCase().includes("msy");
+    let basePrice = 0;
 
-    const mi = data.distance.value / 1609.34;
-    const min = data.duration.value / 60;
+    if (isToMSY || isFromMSY) {
+        basePrice = isToMSY ? 45 : 65; // CCS Airport Flat Rates
+    } else {
+        const googleRes = await axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${process.env.GOOGLE_MAPS_API_KEY}`);
+        const dist = googleRes.data.rows[0].elements[0].distance.value / 1609.34;
+        const time = googleRes.data.rows[0].elements[0].duration.value / 60;
 
-    const isAirport = (a) => {
-        const addr = a.toLowerCase();
-        return addr.includes('msy') || addr.includes('airport') || addr.includes('louis armstrong');
-    };
-
-    let subtotal = 0;
-    if (isAirport(dropoff)) subtotal = 45;
-    else if (isAirport(pickup)) subtotal = 65;
-    else if (bridgeType === 'charter') subtotal = 130;
-    else if (bridgeType === 'tour' || mi > 30) subtotal = (mi * 1.31) + (min * 1.42);
-    else {
-      subtotal = 7 + (mi * 1.30) + (min * 0.50);
-      if (subtotal < 15) subtotal = 15;
+        basePrice = 7 + (1.30 * dist) + (0.50 * time);
+        if (basePrice < 15) basePrice = 15; // The CCS Floor
     }
 
-    const hour = parseInt(time.split(':')[0]);
-    const nightSurcharge = (hour >= 22 || hour < 5) ? 10 : 0;
-    const finalTotal = (subtotal * 1.10) + nightSurcharge;
-
-    res.status(200).json({ price: finalTotal.toFixed(2), mi: mi.toFixed(1) });
-  } catch (err) { res.status(500).json({ error: 'Internal Error' }); }
+    const stewardship = basePrice * 0.10; // 10% Regional Growth Fund
+    const nightOps = (parseInt(startTime) >= 22) ? 10 : 0;
+    
+    res.status(200).json({ total: (basePrice + stewardship + nightOps).toFixed(2) });
 }
