@@ -1,38 +1,59 @@
-const axios = require('axios');
+import axios from 'axios';
 
 export default async function handler(req, res) {
-const { pickup, dropoff, bridgeType, time } = req.body;
+    // Only allow the "Fuel the Mission" handshake
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    // Capture the stakeholder's logistics data
+    const { pickup, dropoff, bridgeType, time } = req.body;
 
     try {
-        // Robust MSY detection for both name and code
-        const isToMSY = destination.toLowerCase().match(/msy|louis armstrong/);
-        const isFromMSY = origin.toLowerCase().match(/msy|louis armstrong/);
+        const isToMSY = dropoff.toLowerCase().match(/msy|louis armstrong/);
+        const isFromMSY = pickup.toLowerCase().match(/msy|louis armstrong/);
         
         let basePrice = 0;
+        let distanceMiles = 0;
 
-        if (isToMSY || isFromMSY) {
+        // 1. Charter Bridge: $65/hour (2-hr min deposit = $130)
+        if (bridgeType === 'charter') {
+            basePrice = 130.00; 
+        } 
+        // 2. Airport Flat Rates: $45 to / $65 from
+        else if (isToMSY || isFromMSY) {
             basePrice = isToMSY ? 45 : 65; 
-        } else {
-            // Added encoding to prevent crashes on spaces/commas
-            const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+        } 
+        // 3. Local vs. Tour Bridge Logistics
+        else {
+            const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(pickup)}&destinations=${encodeURIComponent(dropoff)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
             const googleRes = await axios.get(url);
             
-            const dist = googleRes.data.rows[0].elements[0].distance.value / 1609.34;
-            const time = googleRes.data.rows[0].elements[0].duration.value / 60;
+            // Convert meters to miles and seconds to minutes
+            distanceMiles = googleRes.data.rows[0].elements[0].distance.value / 1609.34;
+            const durationMins = googleRes.data.rows[0].elements[0].duration.value / 60;
 
-            // Local Bridge: $7 base + $1.30/mi + $0.50/min
-            basePrice = 7 + (1.30 * dist) + (0.50 * time);
-            if (basePrice < 15) basePrice = 15; // The CCS Floor
+            // Trigger Tour Bridge if distance > 30 miles
+            if (distanceMiles > 30 || bridgeType === 'tour') {
+                basePrice = (1.31 * distanceMiles) + (1.42 * durationMins);
+            } else {
+                // Local Bridge: $7 + $1.30/mi + $0.50/min ($15 floor)
+                basePrice = 7 + (1.30 * distanceMiles) + (0.50 * durationMins);
+                if (basePrice < 15) basePrice = 15;
+            }
         }
 
-        const stewardship = basePrice * 0.10; // 10% Regional Growth Fund
-        const nightOps = (parseInt(startTime) >= 22) ? 10 : 0; // Night-Ops
+        // 4. Global Variables: Night-Ops ($10) & 10% Stewardship
+        const hour = time ? parseInt(time.split(':')[0]) : 12;
+        const nightSurcharge = (hour >= 22 || hour < 5) ? 10 : 0;
         
-        const finalTotal = (basePrice + stewardship + nightOps).toFixed(2);
-        res.status(200).json({ total: finalTotal });
+        const subtotal = basePrice + nightSurcharge;
+        const totalWithFund = (subtotal * 1.10).toFixed(2); // 10% Growth Fund
+
+        res.status(200).json({ price: totalWithFund, mi: distanceMiles.toFixed(1) });
 
     } catch (error) {
-        // Prevents the "Black Screen" by sending a fallback error
+        // Log the failure in Vercel for diagnostics
         res.status(500).json({ error: "Logistics calculation failed" });
     }
 }
