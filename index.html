@@ -7,7 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://js.stripe.com/v3/"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBw-x8f7_2Z9m-H3k1Lq5p6o7n8m9l0k&libraries=places&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_PUBLIC_GOOGLE_KEY&libraries=places&callback=initMap" async defer></script>
+
     <style>
         :root { --gold: #fcf6ba; }
         body { 
@@ -22,27 +23,58 @@
         }
         @keyframes shimmer { to { background-position: 200% center; } }
         .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(252, 246, 186, 0.1); border-radius: 30px; }
-        .input-field { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.15); color: white !important; border-radius: 8px; outline: none; padding: 1rem; width: 100%; text-transform: uppercase; font-size: 0.75rem; tracking: 0.1em; }
+        .input-field { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.15); color: white !important; border-radius: 8px; outline: none; }
+        input, select { color-scheme: dark; }
         #map { height: 220px; border-radius: 12px; border: 1px solid rgba(252, 246, 186, 0.3); margin-top: 12px; }
     </style>
 </head>
 <body class="flex flex-col items-center min-h-screen py-20 px-6 text-center">
+
     <header class="mb-16">
         <h1 style="font-family: 'Cinzel', serif;" class="text-4xl md:text-6xl gold-shimmer uppercase tracking-widest leading-none">Crescent City Shofur</h1>
-        <p class="text-[14px] text-white uppercase tracking-[0.4em] mt-6 font-semibold italic">Coastal Consolidated Solutions</p>
+        <p class="text-xl md:text-2xl font-light text-white lowercase tracking-widest mt-2">fueling</p>
+        <p class="text-[14px] text-white uppercase tracking-[0.4em] mt-6 font-semibold">Coastal Consolidated Solutions</p>
     </header>
 
-    <div class="w-full max-w-md glass-panel p-8">
-        <div id="commandCenter" class="space-y-6 text-left">
-            <input type="email" id="stakeholderEmail" placeholder="STAKEHOLDER EMAIL" class="input-field">
-            <input type="text" id="pickup" placeholder="PICKUP LOCATION" class="input-field">
-            <input type="text" id="dropoff" placeholder="DESTINATION" class="input-field">
-            <div id="map"></div>
-            <div class="mt-6 text-center">
-                <p id="priceOutput" class="text-5xl gold-shimmer font-light">$0.00</p>
-                <p id="priceDesc" class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest">Awaiting Logistics...</p>
+    <div id="infoPanels" class="w-full max-w-2xl space-y-6 mb-12 text-left">
+        <div class="glass-panel p-8">
+            <h3 class="text-[#fcf6ba] text-[10px] uppercase tracking-widest mb-4 font-bold">Founder’s Note</h3>
+            <p class="text-sm font-light leading-relaxed text-gray-300 italic">"We operate at the intersection of logistics and legacy. Every transaction should leave our infrastructure stronger than we found it."</p>
+        </div>
+        <div class="glass-panel p-8">
+            <h3 class="text-[#fcf6ba] text-[10px] uppercase tracking-widest mb-4 font-bold">Mission Statement</h3>
+            <p class="text-sm font-light leading-relaxed text-gray-300">To steward the movement of the Gulf South through Local Tailored Excellence, optimizing the regional corridor with disciplined stewardship.</p>
+        </div>
+    </div>
+
+    <div class="w-full max-w-md">
+        <button onclick="revealCommand()" id="fuelBtn" class="w-full border-2 border-[#fcf6ba] py-6 px-10 text-[#fcf6ba] uppercase text-xs tracking-[0.5em] font-bold hover:bg-[#fcf6ba] hover:text-black transition-all">
+            Fuel the Mission
+        </button>
+
+        <div id="commandCenter" class="hidden mt-12 space-y-6 text-left">
+            <input type="text" id="stakeholderName" placeholder="STAKEHOLDER NAME" class="input-field w-full p-4 text-xs tracking-widest uppercase">
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="email" id="stakeholderEmail" placeholder="EMAIL" class="input-field flex-1 p-4 text-xs tracking-widest">
+                <input type="tel" id="stakeholderPhone" placeholder="PHONE" class="input-field flex-1 p-4 text-xs tracking-widest">
             </div>
-            <button onclick="dispatchMission()" id="authorizeBtn" disabled class="w-full bg-gray-800 text-gray-500 py-6 text-xs font-black uppercase tracking-[0.5em] rounded-lg transition-all">
+            <select id="bridgeType" onchange="updateMarkers()" class="input-field w-full p-4 text-xs tracking-widest bg-[#0a0118]">
+                <option value="local">Local Bridge</option>
+                <option value="charter">Charter ($130 Deposit)</option>
+                <option value="tour">Tour Bridge</option>
+            </select>
+            <input type="text" id="pickup" placeholder="PICKUP" class="input-field w-full p-4 text-xs tracking-widest uppercase">
+            <input type="text" id="dropoff" placeholder="DESTINATION" class="input-field w-full p-4 text-xs tracking-widest uppercase">
+            <div id="map"></div>
+            <div class="flex gap-4">
+                <input type="date" id="date" onchange="updateMarkers()" class="input-field flex-1 p-4 text-xs">
+                <input type="time" id="time" onchange="updateMarkers()" class="input-field flex-1 p-4 text-xs">
+            </div>
+            <div class="mt-6 text-center py-4 border-t border-white/10">
+                <p id="priceOutput" class="text-5xl gold-shimmer font-light">$0.00</p>
+                <p id="priceDesc" class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest italic">Awaiting Logistics...</p>
+            </div>
+            <button onclick="dispatchMission()" id="authorizeBtn" disabled class="w-full bg-gray-800 text-gray-500 py-6 text-xs font-black uppercase tracking-[0.5em] mt-8 transition-all">
                 Authorize Mission
             </button>
         </div>
@@ -53,37 +85,51 @@
         let map, directionsService, directionsRenderer;
 
         function initMap() {
-            map = new google.maps.Map(document.getElementById('map'), { center: { lat: 29.9511, lng: -90.0715 }, zoom: 11, styles: [{stylers:[{saturation:-100}]}] });
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 29.9511, lng: -90.0715 }, zoom: 11,
+                styles: [{featureType:"all",stylers:[{saturation:-100},{lightness:-50}]}]
+            });
             directionsService = new google.maps.DirectionsService();
             directionsRenderer = new google.maps.DirectionsRenderer({ map, polylineOptions: { strokeColor: "#fcf6ba", strokeWeight: 4 } });
             const acOptions = { componentRestrictions: { country: 'us' } };
-            new google.maps.places.Autocomplete(document.getElementById('pickup'), acOptions).addListener('place_changed', updateLogistics);
-            new google.maps.places.Autocomplete(document.getElementById('dropoff'), acOptions).addListener('place_changed', updateLogistics);
+            new google.maps.places.Autocomplete(document.getElementById('pickup'), acOptions).addListener('place_changed', updateMarkers);
+            new google.maps.places.Autocomplete(document.getElementById('dropoff'), acOptions).addListener('place_changed', updateMarkers);
         }
 
-        async function updateLogistics() {
+        async function updateMarkers() {
             const p = document.getElementById('pickup').value;
             const d = document.getElementById('dropoff').value;
-            if (!p || !d) return;
+            const b = document.getElementById('bridgeType').value;
+            const dt = document.getElementById('date').value;
+            const tm = document.getElementById('time').value;
 
-            const res = await fetch(`/api/price?origin=${encodeURIComponent(p)}&destination=${encodeURIComponent(d)}`);
-            const data = await res.json();
-            
-            if (data.total) {
-                document.getElementById('priceOutput').innerText = `$${data.total}`;
-                document.getElementById('priceDesc').innerText = "10% REGIONAL GROWTH FUND INCLUDED";
-                const btn = document.getElementById('authorizeBtn');
-                btn.disabled = false; btn.classList.replace('bg-gray-800', 'bg-[#fcf6ba]'); btn.classList.replace('text-gray-500', 'text-black');
-                directionsService.route({ origin: p, destination: d, travelMode: 'DRIVING' }, (r, s) => { if (s === 'OK') directionsRenderer.setDirections(r); });
-            }
+            if (!p || !d || !dt || !tm) return;
+            document.getElementById('priceDesc').innerText = "CALCULATING LOGISTICS...";
+
+            try {
+                const res = await fetch('/api/price', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pickup: p, dropoff: d, bridgeType: b, date: dt, time: tm })
+                });
+                const data = await res.json();
+                if (data.price) {
+                    document.getElementById('priceOutput').innerText = `$${data.price}`;
+                    document.getElementById('priceDesc').innerText = `${data.mi} MILES | 10% GROWTH FUND INCLUDED`;
+                    const btn = document.getElementById('authorizeBtn');
+                    btn.disabled = false; btn.classList.replace('bg-gray-800', 'bg-[#fcf6ba]'); btn.classList.replace('text-gray-500', 'text-black');
+                    directionsService.route({ origin: p, destination: d, travelMode: 'DRIVING' }, (r, s) => { if (s === 'OK') directionsRenderer.setDirections(r); });
+                }
+            } catch (e) { document.getElementById('priceDesc').innerText = "ERROR FETCHING QUOTE"; }
         }
 
-        async function dispatchMission() {
+        function revealCommand() { document.getElementById('commandCenter').classList.remove('hidden'); document.getElementById('fuelBtn').style.display = 'none'; google.maps.event.trigger(map, 'resize'); }
+
+        function dispatchMission() {
             const amt = Math.round(parseFloat(document.getElementById('priceOutput').innerText.replace('$', '')) * 100);
-            const { error } = await stripe.redirectToCheckout({
+            stripe.redirectToCheckout({
                 lineItems: [{ price_data: { currency: 'usd', product_data: { name: 'CCS MISSION AUTHORIZATION' }, unit_amount: amt }, quantity: 1 }],
-                mode: 'payment', successUrl: window.location.origin + '?success=true', cancelUrl: window.location.origin,
-                customerEmail: document.getElementById('stakeholderEmail').value
+                mode: 'payment', successUrl: window.location.origin + '?success=true', cancelUrl: window.location.origin
             });
         }
     </script>
