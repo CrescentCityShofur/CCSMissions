@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 export default async function handler(req, res) {
-    const { origin, destination, startTime } = req.query;
+const { pickup, dropoff, bridgeType, time } = req.body;
 
     try {
         // Robust MSY detection for both name and code
