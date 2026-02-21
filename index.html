@@ -124,11 +124,25 @@
 
         function revealCommand() { document.getElementById('commandCenter').classList.remove('hidden'); document.getElementById('fuelBtn').style.display = 'none'; google.maps.event.trigger(map, 'resize'); }
 
-        function dispatchMission() {
-            const amt = Math.round(parseFloat(document.getElementById('priceOutput').innerText.replace('$', '')) * 100);
-            stripe.redirectToCheckout({
-                lineItems: [{ price_data: { currency: 'usd', product_data: { name: 'CCS MISSION AUTHORIZATION' }, unit_amount: amt }, quantity: 1 }],
-                mode: 'payment', successUrl: window.location.origin + '?success=true', cancelUrl: window.location.origin
+        async function dispatchMission() {
+    const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            pickup: document.getElementById('pickup').value,
+            dropoff: document.getElementById('dropoff').value,
+            bridgeType: document.getElementById('bridgeType').value,
+            date: document.getElementById('date').value,
+            time: document.getElementById('time').value
+        })
+    });
+
+    const session = await response.json();
+
+    stripe.redirectToCheckout({
+        sessionId: session.id
+    });
+}
             });
         }
     </script>
