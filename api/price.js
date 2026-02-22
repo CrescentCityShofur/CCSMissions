@@ -1,62 +1,52 @@
 import axios from 'axios';
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: "Method not allowed" });
-    }
+    [span_2](start_span)if (req.method !== 'POST') return res.status(405).json({ error: "Method not allowed" });[span_2](end_span)
 
-    const { pickup, dropoff, bridgeType, time } = req.body;
+    [span_3](start_span)const { pickup, dropoff, bridgeType, time } = req.body;[span_3](end_span)
 
     try {
-        [span_3](start_span)// MSY Logic: Destination = $45, Pickup = $65[span_3](end_span)
-        const isToMSY = dropoff.toLowerCase().match(/msy|louis armstrong/);
-        const isFromMSY = pickup.toLowerCase().match(/msy|louis armstrong/);
+        [span_4](start_span)// Logic for MSY/Airport: $45 Destination, $65 Pickup[span_4](end_span)
+        [span_5](start_span)const isToMSY = dropoff.toLowerCase().match(/msy|louis armstrong/);[span_5](end_span)
+        [span_6](start_span)const isFromMSY = pickup.toLowerCase().match(/msy|louis armstrong/);[span_6](end_span)
         
         let basePrice = 0;
         let distanceMiles = 0;
 
-        [span_4](start_span)// 1. Charter Bridge: $65/hour (2-hr min deposit = $130)[span_4](end_span)
         if (bridgeType === 'charter') {
-            basePrice = 130.00;
+            basePrice = 130.00; [span_7](start_span)// 2-hr min deposit[span_7](end_span)
         } 
-        // 2. Airport Flat Rates (Only if not a longer Tour Bridge)
         else if ((isToMSY || isFromMSY) && bridgeType !== 'tour') {
-            basePrice = isToMSY ? 45 : 65; 
+            basePrice = isToMSY ? [span_8](start_span)45 : 65;[span_8](end_span)
         } 
-        // 3. Distance-based Logistics (Local & Tour)
         else {
-            const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(pickup)}&destinations=${encodeURIComponent(dropoff)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
-            const googleRes = await axios.get(url);
+            [span_9](start_span)const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(pickup)}&destinations=${encodeURIComponent(dropoff)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;[span_9](end_span)
+            [span_10](start_span)const googleRes = await axios.get(url);[span_10](end_span)
             
             const element = googleRes.data.rows[0].elements[0];
-            distanceMiles = element.distance.value / 1609.34;
-            const durationMins = element.duration.value / 60;
+            [span_11](start_span)distanceMiles = element.distance.value / 1609.34;[span_11](end_span)
+            [span_12](start_span)const durationMins = element.duration.value / 60;[span_12](end_span)
 
-            [span_5](start_span)// Trigger Tour Bridge if distance > 30 miles[span_5](end_span)
             if (distanceMiles > 30 || bridgeType === 'tour') {
+                [span_13](start_span)// Tour Bridge: $1.31/mi + $1.42/min[span_13](end_span)
                 basePrice = (1.31 * distanceMiles) + (1.42 * durationMins);
             } else {
-                [span_6](start_span)// Local Bridge: $7 base + $1.30/mi + $0.50/min ($15 floor)[span_6](end_span)
+                [span_14](start_span)// Local Bridge: $7 + $1.30/mi + $0.50/min ($15 floor)[span_14](end_span)
                 basePrice = 7 + (1.30 * distanceMiles) + (0.50 * durationMins);
-                if (basePrice < 15) basePrice = 15;
+                [span_15](start_span)if (basePrice < 15) basePrice = 15;[span_15](end_span)
             }
         }
 
-        [span_7](start_span)// 4. Night-Ops ($10)[span_7](end_span)
-        const hour = time ? parseInt(time.split(':')[0]) : 12;
-        const nightSurcharge = (hour >= 22 || hour < 5) ? 10 : 0;
+        [span_16](start_span)// Night-Ops: $10 after 22:00[span_16](end_span)
+        [span_17](start_span)const hour = time ? parseInt(time.split(':')[0]) : 12;[span_17](end_span)
+        const nightSurcharge = (hour >= 22 || hour < 5) ? [span_18](start_span)10 : 0;[span_18](end_span)
 
-        [span_8](start_span)// 5. Regional Growth Fund (10%)[span_8](end_span)
-        const subtotal = basePrice + nightSurcharge;
-        const totalWithFund = (subtotal * 1.10).toFixed(2);
+        [span_19](start_span)// 10% Regional Growth Fund[span_19](end_span)
+        [span_20](start_span)const subtotal = basePrice + nightSurcharge;[span_20](end_span)
+        [span_21](start_span)const totalWithFund = (subtotal * 1.10).toFixed(2);[span_21](end_span)
 
-        res.status(200).json({ 
-            price: totalWithFund, 
-            mi: distanceMiles.toFixed(1) 
-        });
-
+        [span_22](start_span)res.status(200).json({ price: totalWithFund, mi: distanceMiles.toFixed(1) });[span_22](end_span)
     } catch (error) {
-        console.error("Logistics Error:", error);
-        res.status(500).json({ error: "Logistics calculation failed" });
+        [span_23](start_span)res.status(500).json({ error: "Logistics failed" });[span_23](end_span)
     }
 }
