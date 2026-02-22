@@ -1,0 +1,12 @@
+# Ignore the secret keys file (CRITICAL)
+.env
+
+# Ignore the massive folder of dependencies
+node_modules/
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore build logs
+npm-debug.log*
