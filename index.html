@@ -11,9 +11,10 @@
     <style>
         :root { --gold: #fcf6ba; }
         body { 
-            font-family: 'Montserrat', sans-serif; background-color: #0a0118;
+            font-family: 'Montserrat', sans-serif;
+            background-color: #0a0118;
             background-image: linear-gradient(rgba(10,1,24,0.96), rgba(15,5,30,0.98)), url('nola.png');
-            background-size: cover; background-position: center; background-attachment: fixed; color: #ffffff; 
+            background-size: cover; background-position: center; background-attachment: fixed; color: #ffffff;
         }
         .gold-shimmer {
             background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
@@ -58,19 +59,20 @@
                 <input type="tel" id="stakeholderPhone" placeholder="PHONE" class="input-field flex-1 p-4 text-xs tracking-widest">
             </div>
             <select id="bridgeType" onchange="updateMarkers()" class="input-field w-full p-4 text-xs tracking-widest bg-[#0a0118]">
-                <option value="local">Local Bridge</option>
+                <option value="local">Local Bridge (Bread & Butter)</option>
                 <option value="charter">Charter ($130 Deposit)</option>
-                <option value="tour">Tour Bridge</option>
+                <option value="tour">Tour Bridge (Regional)</option>
             </select>
             <input type="text" id="pickup" placeholder="PICKUP" class="input-field w-full p-4 text-xs tracking-widest uppercase">
             <input type="text" id="dropoff" placeholder="DESTINATION" class="input-field w-full p-4 text-xs tracking-widest uppercase">
+         
             <div id="map"></div>
             <div class="flex gap-4">
                 <input type="date" id="date" onchange="updateMarkers()" class="input-field flex-1 p-4 text-xs">
                 <input type="time" id="time" onchange="updateMarkers()" class="input-field flex-1 p-4 text-xs">
             </div>
             <div class="mt-6 text-center py-4 border-t border-white/10">
-                <p id="priceOutput" class="text-5xl gold-shimmer font-light">$0.00</p>
+                 <p id="priceOutput" class="text-5xl gold-shimmer font-light">$0.00</p>
                 <p id="priceDesc" class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest italic">Awaiting Logistics...</p>
             </div>
             <button onclick="dispatchMission()" id="authorizeBtn" disabled class="w-full bg-gray-800 text-gray-500 py-6 text-xs font-black uppercase tracking-[0.5em] mt-8 transition-all">
@@ -103,8 +105,9 @@
             const tm = document.getElementById('time').value;
 
             if (!p || !d || !dt || !tm) return;
+            
             document.getElementById('priceDesc').innerText = "CALCULATING LOGISTICS...";
-
+            
             try {
                 const res = await fetch('/api/price', {
                     method: 'POST',
@@ -116,33 +119,36 @@
                     document.getElementById('priceOutput').innerText = `$${data.price}`;
                     document.getElementById('priceDesc').innerText = `${data.mi} MILES | 10% GROWTH FUND INCLUDED`;
                     const btn = document.getElementById('authorizeBtn');
-                    btn.disabled = false; btn.classList.replace('bg-gray-800', 'bg-[#fcf6ba]'); btn.classList.replace('text-gray-500', 'text-black');
-                    directionsService.route({ origin: p, destination: d, travelMode: 'DRIVING' }, (r, s) => { if (s === 'OK') directionsRenderer.setDirections(r); });
+                    btn.disabled = false; 
+                    btn.innerText = "Authorize Mission";
+                    btn.classList.replace('bg-gray-800', 'bg-[#fcf6ba]'); 
+                    btn.classList.replace('text-gray-500', 'text-black');
+                    directionsService.route({ origin: p, destination: d, travelMode: 'DRIVING' }, (r, s) => { 
+                        if (s === 'OK') directionsRenderer.setDirections(r); 
+                    });
                 }
-            } catch (e) { document.getElementById('priceDesc').innerText = "ERROR FETCHING QUOTE"; }
+            } catch (e) { 
+                document.getElementById('priceDesc').innerText = "ERROR FETCHING QUOTE";
+            }
         }
 
-        function revealCommand() { document.getElementById('commandCenter').classList.remove('hidden'); document.getElementById('fuelBtn').style.display = 'none'; google.maps.event.trigger(map, 'resize'); }
+        function revealCommand() { 
+            document.getElementById('commandCenter').classList.remove('hidden');
+            document.getElementById('fuelBtn').style.display = 'none'; 
+            google.maps.event.trigger(map, 'resize'); 
+        }
 
-        async function dispatchMission() {
-    const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            pickup: document.getElementById('pickup').value,
-            dropoff: document.getElementById('dropoff').value,
-            bridgeType: document.getElementById('bridgeType').value,
-            date: document.getElementById('date').value,
-            time: document.getElementById('time').value
-        })
-    });
+        function dispatchMission() {
+            const btn = document.getElementById('authorizeBtn');
+            btn.innerText = "DISPATCHING...";
+            btn.disabled = true;
 
-    const session = await response.json();
-
-    stripe.redirectToCheckout({
-        sessionId: session.id
-    });
-}
+            const amt = Math.round(parseFloat(document.getElementById('priceOutput').innerText.replace('$', '')) * 100);
+            stripe.redirectToCheckout({
+                lineItems: [{ price_data: { currency: 'usd', product_data: { name: 'CCS MISSION AUTHORIZATION' }, unit_amount: amt }, quantity: 1 }],
+                mode: 'payment', 
+                successUrl: window.location.origin + '?success=true', 
+                cancelUrl: window.location.origin
             });
         }
     </script>
