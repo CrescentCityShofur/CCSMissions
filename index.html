@@ -1,140 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crescent City Shofur | CCS Missions</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://js.stripe.com/v3/"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBw-x8f7_2Z9m-H3k1Lq5p6o7n8m9l0k&libraries=places&callback=initMap" async defer></script>
-    <style>
-        :root { --gold: #fcf6ba; }
-        body { 
-            font-family: 'Montserrat', sans-serif; background-color: #0a0118;
-            background-image: linear-gradient(rgba(10,1,24,0.96), rgba(15,5,30,0.98)), url('nola.png');
-            background-size: cover; background-position: center; background-attachment: fixed; color: #ffffff; 
-        }
-        .gold-shimmer {
-            background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            animation: shimmer 5s infinite linear; background-size: 200% auto;
-        }
-        @keyframes shimmer { to { background-position: 200% center; } }
-        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(252, 246, 186, 0.1); border-radius: 30px; }
-        .input-field { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.15); color: white !important; border-radius: 8px; outline: none; transition: border 0.3s; }
-        .input-field:focus { border-color: #fcf6ba; }
-        #map { height: 220px; border-radius: 12px; border: 1px solid rgba(252, 246, 186, 0.3); margin-top: 12px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCS Missions | Crescent City Shofur</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+/* ===== HERO BACKGROUND ===== */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+/* ===== GLASS DOORS PANEL ===== */
+.glass-doors {
+  position: relative;
+  z-index: 2;
+  backdrop-filter: blur(14px);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 40px;
+  max-width: 600px;
+  margin: 80px auto;
+  border-radius: 12px;
+  color: white;
+  font-family: 'Cinzel', serif;
+}
+
+/* ===== HEADERS ===== */
+h1, h2 {
+  color: #d4af37;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+/* ===== FORM ===== */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+select, input {
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+}
+
+/* ===== PRICE OUTPUT ===== */
+#priceOutput {
+  font-size: 1.5rem;
+  text-align: center;
+  color: #f5e6b3;
+  margin-top: 10px;
+}
+
+/* ===== BUTTON ===== */
+#authorizeMission {
+  margin-top: 20px;
+  padding: 14px;
+  font-family: 'Cinzel', serif;
+  background: linear-gradient(135deg, #c6a85b, #f5e6b3, #b9932f);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+#authorizeMission:hover {
+  transform: scale(1.03);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .glass-doors {
+    margin: 40px 20px;
+    padding: 25px;
+  }
+}
+
+</style>
 </head>
-<body class="flex flex-col items-center min-h-screen py-20 px-6 text-center">
-    <header class="mb-16">
-        <h1 style="font-family: 'Cinzel', serif;" class="text-4xl md:text-6xl gold-shimmer uppercase tracking-widest leading-none">Crescent City Shofur</h1>
-        <p class="text-[14px] text-white uppercase tracking-[0.4em] mt-6 font-semibold italic underline decoration-[#fcf6ba]">Coastal Consolidated Solutions</p>
-    </header>
 
-    <main class="w-full max-w-2xl space-y-6 mb-12 text-left">
-        <div class="glass-panel p-8">
-            <h2 class="text-[#fcf6ba] text-[10px] uppercase tracking-widest mb-4 font-bold">Founder’s Note</h2>
-            <p class="text-sm font-light leading-relaxed text-gray-300 italic">"We operate at the intersection of logistics and legacy. Every transaction should leave our infrastructure stronger than we found it."</p>
-        </div>
+<body>
 
-        <section id="fuelContainer" class="w-full max-w-md mx-auto">
-            <button onclick="revealCommand()" id="fuelBtn" class="w-full border-2 border-[#fcf6ba] py-6 text-[#fcf6ba] uppercase text-xs tracking-[0.5em] font-bold hover:bg-[#fcf6ba] hover:text-black transition-all rounded-lg">
-                Fuel the Mission
-            </button>
+<section class="hero">
+  <img src="/images/nola.png" class="hero-bg" alt="Crescent City Shofur Crest">
 
-            <div id="commandCenter" class="hidden mt-12 space-y-6">
-                <input type="text" id="stakeholderName" aria-label="Stakeholder Name" placeholder="STAKEHOLDER NAME" class="input-field w-full p-4 text-xs tracking-widest uppercase">
-                <input type="email" id="stakeholderEmail" aria-label="Stakeholder Email" placeholder="EMAIL" class="input-field w-full p-4 text-xs tracking-widest">
-                <input type="tel" id="stakeholderPhone" aria-label="Stakeholder Phone" placeholder="PHONE" class="input-field w-full p-4 text-xs tracking-widest">
-                
-                <select id="bridgeType" aria-label="Bridge Type Selection" onchange="updateLogistics()" class="input-field w-full p-4 text-xs tracking-widest bg-[#0a0118]">
-                    <option value="local">Local Bridge</option>
-                    <option value="charter">Charter Bridge ($130 Deposit)</option>
-                    <option value="tour">Tour Bridge</option>
-                </select>
+  <div class="glass-doors">
 
-                <input type="text" id="pickup" aria-label="Pickup Location" placeholder="PICKUP" class="input-field w-full p-4 text-xs tracking-widest uppercase">
-                <input type="text" id="dropoff" aria-label="Destination" placeholder="DESTINATION" class="input-field w-full p-4 text-xs tracking-widest uppercase">
-                
-                <div id="map" role="img" aria-label="Route Visualizer"></div>
+    <h1>CRESCENT CITY SHOFUR</h1>
+    <h2>CCS Missions Logistics Hub</h2>
 
-                <div class="flex gap-4">
-                    <input type="date" id="date" aria-label="Mission Date" onchange="updateLogistics()" class="input-field flex-1 p-4 text-xs">
-                    <input type="time" id="time" aria-label="Mission Time" onchange="updateLogistics()" class="input-field flex-1 p-4 text-xs">
-                </div>
+    <form id="missionForm">
 
-                <div class="mt-6 text-center">
-                    <p id="priceOutput" class="text-5xl gold-shimmer font-light">$0.00</p>
-                    <p id="priceDesc" class="text-[10px] text-gray-400 mt-2 uppercase tracking-widest">Awaiting Logistics...</p>
-                </div>
+      <label for="bridgeType">Mission Type</label>
+      <select id="bridgeType" aria-label="Select mission type">
+        <option value="standard">Standard Mission</option>
+        <option value="airport">Airport Transfer</option>
+      </select>
 
-                <button onclick="dispatchMission()" id="authorizeBtn" disabled class="w-full bg-gray-800 text-gray-500 py-6 text-xs font-black uppercase tracking-[0.5em] transition-all rounded-lg">
-                    Authorize Mission
-                </button>
-            </div>
-        </section>
-    </main>
+      <label for="date">Mission Date</label>
+      <input type="date" id="date" aria-label="Select mission date">
 
-    <script>
-        const stripe = Stripe('pk_live_51Sub4u00aruvjmQ2mvXyX7v3YFY11LEMViffvxVJ4rYQ03MyatLbE640LKBAZZnrji9z6RKB4irBb0MTdpTRrcXmW00Lhx0XJ2v');
-        let map, directionsService, directionsRenderer;
+      <label for="time">Mission Time</label>
+      <input type="time" id="time" aria-label="Select mission time">
 
-        function initMap() {
-            map = new google.maps.Map(document.getElementById('map'), { center: { lat: 29.9511, lng: -90.0715 }, zoom: 11, styles: [{stylers:[{saturation:-100}]}] });
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({ map, polylineOptions: { strokeColor: "#fcf6ba", strokeWeight: 4 } });
-            
-            const acOptions = { componentRestrictions: { country: 'us' } };
-            new google.maps.places.Autocomplete(document.getElementById('pickup'), acOptions).addListener('place_changed', updateLogistics);
-            new google.maps.places.Autocomplete(document.getElementById('dropoff'), acOptions).addListener('place_changed', updateLogistics);
-        }
+      <div id="priceOutput">$0.00</div>
 
-        async function updateLogistics() {
-            const p = document.getElementById('pickup').value;
-            const d = document.getElementById('dropoff').value;
-            const b = document.getElementById('bridgeType').value;
-            const t = document.getElementById('time').value;
-            if (!p || !d || !t) return;
+      <button type="button" id="authorizeMission">
+        Authorize Mission
+      </button>
 
-            // FIX: Handshake aligned with your Vercel backend POST logic
-            try {
-                const res = await fetch('/api/price', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pickup: p, dropoff: d, bridgeType: b, time: t })
-                });
-                const data = await res.json();
-                
-                if (data.price) {
-                    document.getElementById('priceOutput').innerText = `$${data.price}`;
-                    document.getElementById('priceDesc').innerText = "10% REGIONAL GROWTH FUND INCLUDED";
-                    const btn = document.getElementById('authorizeBtn');
-                    btn.disabled = false;
-                    btn.style.backgroundColor = '#fcf6ba';
-                    btn.style.color = '#000';
-                    directionsService.route({ origin: p, destination: d, travelMode: 'DRIVING' }, (r, s) => { if (s === 'OK') directionsRenderer.setDirections(r); });
-                }
-            } catch (e) { console.error("Handshake Failed"); }
-        }
+    </form>
 
-        function revealCommand() { 
-            document.getElementById('commandCenter').classList.remove('hidden'); 
-            document.getElementById('fuelBtn').classList.add('hidden');
-            google.maps.event.trigger(map, 'resize'); 
-        }
+  </div>
+</section>
 
-        function dispatchMission() {
-            const finalPrice = document.getElementById('priceOutput').innerText.replace('$', '');
-            const amtCents = Math.round(parseFloat(finalPrice) * 100);
-            
-            stripe.redirectToCheckout({
-                lineItems: [{ price_data: { currency: 'usd', product_data: { name: 'CCS LOGISTICS MISSION' }, unit_amount: amtCents }, quantity: 1 }],
-                mode: 'payment', successUrl: window.location.origin, cancelUrl: window.location.origin,
-                customerEmail: document.getElementById('stakeholderEmail').value
-            });
-        }
-    </script>
+<script>
+
+/* ===== STRIPE PAYMENT LINK REDIRECT ===== */
+
+function dispatchMission() {
+  window.location.href = "https://buy.stripe.com/4gM4gr1UTeangXoevr4Vy00";
+}
+
+/* ===== ENSURE MOBILE CLICK WORKS ===== */
+
+document.addEventListener("DOMContentLoaded", () => {
+  const button = document.getElementById("authorizeMission");
+  if (button) {
+    button.addEventListener("click", dispatchMission);
+  }
+});
+
+</script>
+
 </body>
 </html>
