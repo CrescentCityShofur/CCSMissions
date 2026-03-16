@@ -9,27 +9,35 @@ export default async function handler(req, res) {
     const { pickup, dropoff, bridgeType, time } = req.body;
 
     try {
-        // 2. Identify Airport Missions
+        // 2. Identify Airport Missions (highest priority)
         const isToMSY = dropoff.toLowerCase().match(/msy|louis armstrong/);
         const isFromMSY = pickup.toLowerCase().match(/msy|louis armstrong/);
-        
+        const isAirportRun = isToMSY || isFromMSY;
+
         let basePrice = 0;
         let distanceMiles = 0;
 
-        // 3. Logic: Charter vs. Airport vs. Local
-        if (bridgeType === 'charter') {
-            basePrice = 130.00; 
-        } 
-        else if (isToMSY || isFromMSY) {
-            basePrice = isToMSY ? 45 : 65; 
-        } 
+        // Airport flat-rate: $45 total (includes 10% growth fund)
+        if (isAirportRun) {
+            basePrice = 45.00;
+            distanceMiles = 0;  // No calc needed—avoids 0.0 bug
+        }
+        // Charter override
+        else if (bridgeType === 'charter') {
+            basePrice = 130.00;
+        }
+        // Local / Tour — use Google Distance Matrix
         else {
-            // Google Distance Matrix Call
             const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(pickup)}&destinations=${encodeURIComponent(dropoff)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
             const googleRes = await axios.get(url);
             
-            distanceMiles = googleRes.data.rows[0].elements[0].distance.value / 1609.34;
-            const durationMins = googleRes.data.rows[0].elements[0].duration.value / 60;
+            const element = googleRes.data.rows[0].elements[0];
+            if (element.status !== 'OK') {
+                throw new Error('Google Maps failed');
+            }
+
+            distanceMiles = element.distance.value / 1609.34;
+            const durationMins = element.duration.value / 60;
 
             if (distanceMiles > 30 || bridgeType === 'tour') {
                 basePrice = (1.31 * distanceMiles) + (1.42 * durationMins);
@@ -39,17 +47,18 @@ export default async function handler(req, res) {
             }
         }
 
-        // 4. Night-Ops & Stewardship Growth Fund
+        // 3. Night-Ops & Stewardship Growth Fund
         const hour = time ? parseInt(time.split(':')[0]) : 12;
         const nightSurcharge = (hour >= 22 || hour < 5) ? 10 : 0;
         
         const subtotal = basePrice + nightSurcharge;
         const totalWithFund = (subtotal * 1.10).toFixed(2); 
 
-        // 5. Success Response
-        res.status(200).json({ price: totalWithFund, mi: distanceMiles.toFixed(1) });
+        // 4. Success Response
+        res.status(200).json({ 
+            price: totalWithFund, 
+            mi: distanceMiles.toFixed(1),
+            note: isAirportRun ? "Flat airport rate: $45 incl. 10% growth fund" : ""
+        });
 
-    } catch (error) {
-        res.status(500).json({ error: "Logistics calculation failed" });
-    }
-}
+    } catc
