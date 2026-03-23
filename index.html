@@ -44,7 +44,6 @@
 
     <header class="mb-16">
         <h1 style="font-family: 'Cinzel', serif;" class="text-4xl md:text-6xl gold-shimmer uppercase tracking-widest leading-none">CCS Missions</h1>
-        <!-- Optional legacy: <p class="text-sm text-gray-400 mt-1">formerly Crescent City Shofur</p> -->
         <p class="text-xl md:text-2xl font-light text-white lowercase tracking-widest mt-2">empowering self-sufficiency</p>
         <p class="text-[14px] text-white uppercase tracking-[0.4em] mt-6 font-semibold underline decoration-[#fcf6ba]">Coastal Consolidated Solutions</p>
     </header>
@@ -75,13 +74,12 @@
                 <input type="email" id="stakeholderEmail" aria-label="Stakeholder Email" placeholder="EMAIL" class="input-field flex-1 p-4 text-xs tracking-widest">
                 <input type="tel" id="stakeholderPhone" aria-label="Stakeholder Phone" placeholder="PHONE" class="input-field flex-1 p-4 text-xs tracking-widest">
             </div>
-            <select id="bridgeType" aria-label="Consultation Type" class="input-field w-full p-4 text-xs tracking-widest bg-[#0a0118]">
-                <option value="solar">Solar Assessment</option>
-                <option value="wind">Wind + Hybrid</option>
-                <option value="water">Water Purification</option>
+            <select id="meetingType" aria-label="Meeting Type" class="input-field w-full p-4 text-xs tracking-widest bg-[#0a0118]">
+                <option value="short">Short Meeting</option>
+                <option value="long">Long Meeting</option>
+                <option value="coastal">Coastal Meeting</option>
             </select>
             <input type="text" id="pickup" aria-label="Site Address" placeholder="SITE ADDRESS / LOCATION" class="input-field w-full p-4 text-xs tracking-widest uppercase">
-            <!-- Removed dropoff since not rides; reuse pickup for site -->
 
             <div id="map" role="img" aria-label="Site Location Map"></div>
 
@@ -103,18 +101,13 @@
 
     <script>
         const stripe = Stripe('pk_live_51Sub4u00aruvjmQ2mvXyX7v3YFY11LEMViffvxVJ4rYQ03MyatLbE640LKBAZZnrji9z6RKB4irBb0MTdpTRrcXmW00Lhx0XJ2v');
-        let map, directionsService, directionsRenderer;
+        let map;
 
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 30.4515, lng: -91.1871 }, // Baton Rouge center
                 zoom: 11,
                 styles: [{stylers:[{saturation:-100}]}]
-            });
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({ 
-                map, 
-                polylineOptions: { strokeColor: "#fcf6ba", strokeWeight: 4 } 
             });
             
             const acOptions = { componentRestrictions: { country: 'us' } };
@@ -134,18 +127,19 @@
                 const res = await fetch('/api/price', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ site, date, time }) // Update backend to handle consultation params
+                    body: JSON.stringify({ site, date, time, meetingType: document.getElementById('meetingType').value })
                 });
                 const data = await res.json();
                 
                 if (data.price) {
                     document.getElementById('priceOutput').innerText = `$${data.price}`;
-                    document.getElementById('priceDesc').innerText = `EST. TRAVEL & ASSESSMENT FEE`;
+                    document.getElementById('priceDesc').innerText = `EST. CONSULTATION FEE`;
                     const btn = document.getElementById('authorizeBtn');
                     btn.disabled = false;
                     btn.classList.replace('bg-gray-800', 'bg-[#fcf6ba]');
                     btn.classList.replace('text-gray-500', 'text-black');
-                    // Optional: Show map pin for site only (no route needed)
+
+                    // Show map pin for site
                     const geocoder = new google.maps.Geocoder();
                     geocoder.geocode({ address: site }, (results, status) => {
                         if (status === 'OK') {
