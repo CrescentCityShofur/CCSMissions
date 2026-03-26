@@ -87,9 +87,16 @@
             <div id="map" role="img" aria-label="Site Location Map"></div>
 
             <div class="flex gap-4">
-                <input type="date" id="date" aria-label="Preferred Date" class="input-field flex-1 p-4 text-xs">
-                <input type="time" id="time" aria-label="Preferred Time" class="input-field flex-1 p-4 text-xs">
+                <div class="flex-1">
+                    <label for="date" class="block text-[#fcf6ba] text-xs uppercase tracking-widest mb-2 font-semibold">Date</label>
+                    <input type="date" id="date" aria-label="Preferred Date" class="input-field w-full p-4 text-xs">
+                </div>
+                <div class="flex-1">
+                    <label for="time" class="block text-[#fcf6ba] text-xs uppercase tracking-widest mb-2 font-semibold">Time</label>
+                    <input type="time" id="time" aria-label="Preferred Time" class="input-field w-full p-4 text-xs">
+                </div>
             </div>
+            <p class="text-sm text-gray-400 italic mt-2">Bookings must be at least 1.5 hours in advance—please select a time at least 90 minutes from now.</p>
             
             <div class="mt-6 text-center py-4 border-t border-white/10">
                 <p id="priceOutput" class="text-5xl gold-shimmer font-light">$0.00</p>
@@ -209,6 +216,24 @@
         }
 
         async function dispatchMission() {
+            // Validate booking is at least 1.5 hours in advance
+            const selectedDate = document.getElementById('date').value;
+            const selectedTime = document.getElementById('time').value;
+            
+            if (!selectedDate || !selectedTime) {
+                alert('Please select both a date and time.');
+                return;
+            }
+            
+            const selectedDateTime = new Date(`${selectedDate}T${selectedTime}`);
+            const now = new Date();
+            const minBookingTime = new Date(now.getTime() + (90 * 60 * 1000)); // 90 minutes from now
+            
+            if (selectedDateTime < minBookingTime) {
+                alert('Please schedule at least 1.5 hours in advance.');
+                return;
+            }
+            
             const finalPrice = document.getElementById('priceOutput').innerText.replace('$', '');
             const amtCents = Math.round(parseFloat(finalPrice) * 100);
             
