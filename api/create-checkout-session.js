@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { amount, customerEmail, customerName, meetingType, siteAddress, date, time } = req.body;
+        const { amount, customerEmail, customerName, meetingType, startAddress, endAddress, date, time } = req.body;
 
         // Validate required fields
         if (!amount || amount <= 0) {
@@ -21,7 +21,10 @@ export default async function handler(req, res) {
             coastal: 'Coastal Site Consultation'
         };
         const productName = meetingLabels[meetingType] || 'CCS Consultation';
-        const description = `${productName} at ${siteAddress} on ${date} at ${time}`;
+        const locationInfo = endAddress 
+            ? `from ${startAddress} to ${endAddress}` 
+            : `at ${startAddress}`;
+        const description = `${productName} ${locationInfo} on ${date} at ${time}`;
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -41,7 +44,8 @@ export default async function handler(req, res) {
             metadata: {
                 customerName: customerName || '',
                 meetingType: meetingType || '',
-                siteAddress: siteAddress || '',
+                startAddress: startAddress || '',
+                endAddress: endAddress || '',
                 date: date || '',
                 time: time || '',
             },

@@ -79,7 +79,10 @@
                 <option value="long">Long Meeting</option>
                 <option value="coastal">Coastal Meeting</option>
             </select>
-            <input type="text" id="pickup" aria-label="Site Address" placeholder="SITE ADDRESS / LOCATION" class="input-field w-full p-4 text-xs tracking-widest uppercase">
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="pickup" aria-label="Start of Mission Address" placeholder="START OF MISSION ADDRESS" class="input-field flex-1 p-4 text-xs tracking-widest uppercase">
+                <input type="text" id="dropoff" aria-label="End of Mission Point" placeholder="END OF MISSION POINT" class="input-field flex-1 p-4 text-xs tracking-widest uppercase">
+            </div>
 
             <div id="map" role="img" aria-label="Site Location Map"></div>
 
@@ -113,21 +116,32 @@
             const acOptions = { componentRestrictions: { country: 'us' } };
             new google.maps.places.Autocomplete(document.getElementById('pickup'), acOptions)
                 .addListener('place_changed', updateMarkers);
+            new google.maps.places.Autocomplete(document.getElementById('dropoff'), acOptions)
+                .addListener('place_changed', updateMarkers);
         }
 
+        let markers = [];
+
         async function updateMarkers() {
-            const site = document.getElementById('pickup').value;
+            const pickup = document.getElementById('pickup').value;
+            const dropoff = document.getElementById('dropoff').value;
             const date = document.getElementById('date').value;
             const time = document.getElementById('time').value;
 
-            if (!site || !date || !time) return;
+            if (!pickup || !date || !time) return;
             document.getElementById('priceDesc').innerText = "CALCULATING DETAILS...";
 
             try {
                 const res = await fetch('/api/price', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ site, date, time, meetingType: document.getElementById('meetingType').value })
+                    body: JSON.stringify({ 
+                        pickup, 
+                        dropoff, 
+                        date, 
+                        time, 
+                        meetingType: document.getElementById('meetingType').value 
+                    })
                 });
                 const data = await res.json();
                 
@@ -139,14 +153,49 @@
                     btn.classList.replace('bg-gray-800', 'bg-[#fcf6ba]');
                     btn.classList.replace('text-gray-500', 'text-black');
 
-                    // Show map pin for site
+                    // Clear existing markers
+                    markers.forEach(m => m.setMap(null));
+                    markers = [];
+
                     const geocoder = new google.maps.Geocoder();
-                    geocoder.geocode({ address: site }, (results, status) => {
+                    const bounds = new google.maps.LatLngBounds();
+
+                    // Show start marker (green)
+                    geocoder.geocode({ address: pickup }, (results, status) => {
                         if (status === 'OK') {
-                            map.setCenter(results[0].geometry.location);
-                            new google.maps.Marker({ position: results[0].geometry.location, map });
+                            const marker = new google.maps.Marker({ 
+                                position: results[0].geometry.location, 
+                                map,
+                                label: 'A',
+                                title: 'Start of Mission'
+                            });
+                            markers.push(marker);
+                            bounds.extend(results[0].geometry.location);
+                            
+                            // If no dropoff, just center on pickup
+                            if (!dropoff) {
+                                map.setCenter(results[0].geometry.location);
+                                map.setZoom(14);
+                            }
                         }
                     });
+
+                    // Show end marker (red) if dropoff exists
+                    if (dropoff) {
+                        geocoder.geocode({ address: dropoff }, (results, status) => {
+                            if (status === 'OK') {
+                                const marker = new google.maps.Marker({ 
+                                    position: results[0].geometry.location, 
+                                    map,
+                                    label: 'B',
+                                    title: 'End of Mission'
+                                });
+                                markers.push(marker);
+                                bounds.extend(results[0].geometry.location);
+                                map.fitBounds(bounds);
+                            }
+                        });
+                    }
                 }
             } catch (e) {
                 document.getElementById('priceDesc').innerText = "ERROR FETCHING DETAILS";
@@ -177,7 +226,8 @@
                         customerEmail: document.getElementById('stakeholderEmail').value,
                         customerName: document.getElementById('stakeholderName').value,
                         meetingType: document.getElementById('meetingType').value,
-                        siteAddress: document.getElementById('pickup').value,
+                        startAddress: document.getElementById('pickup').value,
+                        endAddress: document.getElementById('dropoff').value,
                         date: document.getElementById('date').value,
                         time: document.getElementById('time').value
                     })
