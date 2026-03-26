@@ -159,24 +159,48 @@
             google.maps.event.trigger(map, 'resize'); 
         }
 
-        function dispatchMission() {
+        async function dispatchMission() {
             const finalPrice = document.getElementById('priceOutput').innerText.replace('$', '');
             const amtCents = Math.round(parseFloat(finalPrice) * 100);
             
-            stripe.redirectToCheckout({
-                lineItems: [{ 
-                    price_data: { 
-                        currency: 'usd', 
-                        product_data: { name: 'CCS CONSULTATION REQUEST' }, 
-                        unit_amount: amtCents 
-                    }, 
-                    quantity: 1 
-                }],
-                mode: 'payment',
-                successUrl: window.location.origin + '?success=true',
-                cancelUrl: window.location.origin,
-                customerEmail: document.getElementById('stakeholderEmail').value
-            });
+            const btn = document.getElementById('authorizeBtn');
+            btn.disabled = true;
+            btn.innerText = 'PROCESSING...';
+
+            try {
+                // Call backend to create Stripe checkout session
+                const response = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        amount: amtCents,
+                        customerEmail: document.getElementById('stakeholderEmail').value,
+                        customerName: document.getElementById('stakeholderName').value,
+                        meetingType: document.getElementById('meetingType').value,
+                        siteAddress: document.getElementById('pickup').value,
+                        date: document.getElementById('date').value,
+                        time: document.getElementById('time').value
+                    })
+                });
+
+                const session = await response.json();
+
+                if (session.error) {
+                    throw new Error(session.error);
+                }
+
+                // Redirect to Stripe Checkout using the session ID from backend
+                const result = await stripe.redirectToCheckout({ sessionId: session.id });
+
+                if (result.error) {
+                    throw new Error(result.error.message);
+                }
+            } catch (error) {
+                console.error('Checkout error:', error);
+                alert('There was an error processing your request. Please try again.');
+                btn.disabled = false;
+                btn.innerText = 'REQUEST CONSULTATION';
+            }
         }
     </script>
 
