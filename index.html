@@ -7,7 +7,28 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://js.stripe.com/v3/"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAaPRyrkFfUOmhQktzRS6rd1jMrGMnuzgI&libraries=places&callback=initMap" async defer></script>
+    <script>
+        // Load Google Maps dynamically with API key from environment
+        async function loadGoogleMaps() {
+            try {
+                const res = await fetch('/api/maps-config');
+                const { apiKey, error } = await res.json();
+                if (error || !apiKey) {
+                    console.error('Maps API key not configured');
+                    document.getElementById('map').innerHTML = '<p class="text-gray-400 text-sm p-4">Map unavailable - API key not configured</p>';
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            } catch (e) {
+                console.error('Failed to load maps config:', e);
+            }
+        }
+        loadGoogleMaps();
+    </script>
     <style>
         :root { --gold: #fcf6ba; }
         body { 
