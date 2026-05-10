@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --midnight: #0a0118;
+  --lsu-purple: #461d7c;
+  --mardi-gold: #fdb927;
+  --mardi-green: #007a33;
+  --emergency-red: #cc0000;
+}
+
+@theme inline {
+  --color-midnight: var(--midnight);
+  --color-lsu-purple: var(--lsu-purple);
+  --color-mardi-gold: var(--mardi-gold);
+  --color-mardi-green: var(--mardi-green);
+  --color-emergency-red: var(--emergency-red);
+  
+  --font-cinzel: "Cinzel", serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+body {
+  background-color: var(--midnight);
+  color: white;
+  font-family: var(--font-mono);
+  overflow: hidden;
+}
+
+.glass {
+  background: rgba(70, 29, 124, 0.12);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(253, 185, 39, 0.25);
+}
+
+.terminal-glow {
+  box-shadow: 0 0 30px rgba(70, 29, 124, 0.5);
+}
+
+.emergency-mode {
+  border-color: var(--emergency-red) !important;
+  box-shadow: 0 0 30px rgba(204, 0, 0, 0.6) !important;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-message {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
